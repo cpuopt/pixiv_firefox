@@ -1,1 +1,12 @@
 #示例
+
+name: "pixiv firefox browser auto"
+
+on:
+    push:
+        branches:
+            -main
+
+jobs:
+    build:
+        runs-on: windows
