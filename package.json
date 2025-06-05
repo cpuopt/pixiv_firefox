@@ -1,0 +1,35 @@
+{
+  "name": "powerful-pixiv-downloader",
+  "version": "17.6.0",
+  "description": "强大的 Pixiv 批量下载器。Powerful Pixiv batch downloader. 強力な Pixiv ダウンローダー。",
+  "repository": "https://github.com/xuejianxianzun/PixivBatchDownloader",
+  "author": "xuejianxianzun",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "fmt": "prettier -c --write \"src/ts/**\" && prettier -c --write \"src/style/**\"",
+    "ts": "webpack --config ./webpack.conf.js",
+    "less": "lessc ./src/style/style.less ./dist/style/style.css && lessc ./src/style/showLargerThumbnails.less ./dist/style/showLargerThumbnails.css",
+    "pre-build": "npm run fmt && npm run ts && npm run less",
+    "build": "npm run pre-build && node ./pack.js"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.0.154",
+    "@types/har-format": "1.2.8",
+    "@types/node": "^13.13.5",
+    "@typescript-eslint/eslint-plugin": "^2.7.0",
+    "@typescript-eslint/parser": "^2.7.0",
+    "archiver": "^3.1.1",
+    "eslint": "^6.6.0",
+    "eslint-config-prettier": "^6.5.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "less": "^4.1.3",
+    "prettier": "3.5.3",
+    "recursive-copy": "^2.0.10",
+    "ts-loader": "^6.2.1",
+    "ts-node": "^8.5.2",
+    "typescript": "^3.9.10",
+    "viewerjs": "^1.4.0",
+    "webpack": "^5.88.1",
+    "webpack-cli": "^5.1.4"
+  }
+}

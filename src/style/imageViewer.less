@@ -1,0 +1,114 @@
+#viewerWarpper {
+  position: relative;
+  margin: 30px auto 15px;
+  overflow: hidden;
+  padding: 16px 0 100px 0;
+  display: none;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+
+  ul {
+    max-width: 568px;
+    margin: 24px auto;
+    padding: 0 16px 3px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: nowrap;
+    overflow: auto;
+  }
+
+  li {
+    display: flex;
+    flex-shrink: 0;
+    margin-right: 8px;
+    overflow: hidden;
+
+    img {
+      cursor: pointer;
+      max-height: 144px;
+      width: auto;
+    }
+  }
+}
+
+.viewer-backdrop {
+  background: rgba(0, 0, 0, 0.8) !important;
+
+  .viewer-canvas {
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
+
+  .viewer-toolbar {
+    .viewer-next,
+    .viewer-prev {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+      border-radius: 50%;
+      cursor: pointer;
+      height: 100px;
+      width: 100px;
+      overflow: hidden;
+    }
+
+    .viewer-prev {
+      position: fixed;
+      left: -70px;
+      top: 40%;
+
+      &::before {
+        top: 40px;
+        left: 70px;
+        position: absolute;
+      }
+    }
+
+    .viewer-next {
+      position: fixed;
+      right: -70px;
+      top: 40%;
+
+      &::before {
+        left: 10px;
+        top: 40px;
+        position: absolute;
+      }
+    }
+
+    // 这是下载器添加的下载按钮
+    .viewer-add-btn {
+      color: #fff;
+      font-size: 12px;
+      line-height: 24px;
+      transition: all 1s;
+      &::marker {
+        content: none;
+      }
+    }
+  }
+
+  .viewer-navbar {
+    background: rgba(0, 0, 0, 0.3);
+    .viewer-list {
+      li {
+        width: 50px !important;
+        img {
+          width: 50px !important;
+          height: 50px !important;
+          transform: unset !important;
+          object-fit: contain;
+          object-position: center center;
+        }
+      }
+    }
+  }
+}
+
+.rotate360 {
+  transform: rotate(360deg);
+}
+
+.theme-dark {
+  &#viewerWarpper {
+    border: none;
+  }
+}

@@ -1,0 +1,379 @@
+@import './var.less';
+@import './deleteWorks.less';
+@import './selectWork.less';
+@import './search.less';
+@import './rightButtons.less';
+@import './centerPanel.less';
+@import './outputWrap.less';
+@import './log.less';
+@import './msgBox.less';
+@import './blockAds.less';
+@import './imageViewer.less';
+@import './blockTagsForSpecificUser.less';
+@import './Loading.less';
+@import './setUserName.less';
+@import './DoNotDownloadLastFewImages.less';
+@import './UseDifferentNameRuleIfWorkHasTagWarp.less';
+@import './input.less';
+@import './previewWorkDetailPanel.less';
+// @import './showLargerThumbnails.less';
+
+:root {
+  --box-shadow: rgba(14, 168, 239, 0.4) 0px 2px 6px;
+}
+
+// less 里不支持将属性值直接设置为 var(--var) 形式，需要用 less 的变量做一层包装
+@boxShadow: var(--box-shadow);
+
+// 储存通用规则和一些零散的元素的规则
+.warn {
+  color: #d27e00;
+}
+
+.red {
+  color: #f00;
+}
+
+.green {
+  color: #14ad27;
+}
+
+.icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: initial;
+  fill: currentColor;
+  overflow: hidden;
+}
+
+.beautify_scrollbar {
+  // 滚动条整体
+  // width 是垂直滚动条的宽度，height 是水平滚动条的高度
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  // 整个滚动条的底色
+  //&::-webkit-scrollbar-track-piece {background:#fcfcfc;}
+
+  // 滚动条的滑块部分
+  &::-webkit-scrollbar-thumb {
+    background-color: #3ab8f2;
+    border-radius: 10px;
+  }
+
+  // 垂直滚动条的滑块部分
+  // &::-webkit-scrollbar-thumb:vertical {
+  //   background-color: @beautifyBlue;
+  //   border-radius: 10px;
+  // }
+
+  // 水平滚动条的滑块部分
+  // &::-webkit-scrollbar-thumb:horizontal {
+  //   background-color: @beautifyBlue;
+  //   border-radius: 10px;
+  // }
+}
+
+// 隐藏一些广告元素
+div[id^='adsdk'] {
+  display: none !important;
+}
+
+// 作品页面里，作品大图下方的作品列表导航区域
+.cAicGw,
+main section nav[style] {
+  // 滚动条整体
+  // width 是垂直滚动条的宽度，height 是水平滚动条的高度
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  // 滚动条的滑块部分
+  &::-webkit-scrollbar-thumb {
+    background-color: #0096fa;
+    border-radius: 10px;
+  }
+}
+
+#quickBookmarkEl {
+  font-size: 34px;
+  line-height: 30px;
+  margin-right: 15px;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+}
+
+html[data-xzpagetheme='white'] #quickBookmarkEl {
+  color: #1f1f1f;
+}
+
+html[data-xzpagetheme='dark'] #quickBookmarkEl {
+  color: #fff;
+}
+
+.bookmarkedColor {
+  color: #ff4060 !important;
+}
+
+#tip {
+  color: #fff;
+  font-size: 14px;
+  position: fixed;
+  z-index: 5001;
+  max-width: 500px;
+  left: 0;
+  top: 0;
+  background: #02a3ec;
+  padding: 6px 8px;
+  border-radius: 5px;
+  line-height: 20px;
+  word-break: break-word;
+  display: none;
+}
+
+#down_id_input {
+  margin: 6px auto;
+  background: #fff;
+  width: 600px;
+  height: 80px;
+  font-size: 12px;
+  padding: 7px;
+  display: none;
+  position: relative;
+  z-index: 99;
+  border: 1px solid @themeBlue;
+}
+
+// 如果一些元素在切换颜色主题时背景颜色会变化，就给它们加上渐变效果
+#logWrap,
+.centerWrap,
+.centerWrap_head,
+.outputWrap,
+.settingForm,
+.tabsTitle,
+.xz_msg_box {
+  transition: background 0.5s;
+}
+
+#xzMaskWrap {
+  position: fixed;
+  margin: auto;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 2147483647;
+  display: none;
+  background-color: #fff;
+  justify-content: center;
+  align-items: center;
+}
+
+.xzToast {
+  position: fixed;
+  z-index: 2147483647;
+  margin: auto;
+  font-size: 14px;
+  pointer-events: none;
+  display: inline-block;
+  max-width: 500px;
+  color: #fff;
+  background-color: @beautifyBlue;
+  box-shadow: @boxShadow;
+  padding: 8px 10px;
+  border-radius: 4px;
+}
+
+.xzToast.mobile {
+  font-size: 16px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-family: @MobileFontFamily;
+}
+
+#previewWorkWrap {
+  position: fixed;
+  z-index: 100000;
+  display: none;
+  width: 600px;
+  height: 600px;
+  left: 200px;
+  top: 500px;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid @beautifyBlue;
+  background-color: rgba(41, 179, 243, 0.1);
+  box-shadow: @boxShadow;
+
+  img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+#previewWorkTip {
+  background-color: @beautifyBlue;
+  color: #fff;
+  height: 22px;
+  // 因为摘要信息上面有 border，两者在视觉上是连在一起的，所以 line-height 要小一些，使文字向上提一些
+  line-height: 21px;
+  overflow: hidden;
+  display: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  span {
+    font-size: 14px;
+    padding: 0 5px;
+
+    a {
+      color: #fff;
+    }
+  }
+}
+
+#originSizeWrap {
+  display: none;
+  position: fixed;
+  z-index: 100001;
+  top: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  width: 1200px;
+  height: 1200px;
+  border: 2px solid @beautifyBlue;
+  background-color: rgba(41, 179, 243, 0.2);
+  box-shadow: @boxShadow;
+
+  img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+#zoomBtnOnThumb {
+  position: absolute;
+  z-index: 99998;
+  display: none;
+  left: 0px;
+  top: 0px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  padding: 0;
+  text-align: center;
+  background-color: @beautifyBlue;
+  border-radius: 4px;
+  color: #fff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  font-size: 22px;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.downloadBtnOnThumb {
+  position: absolute;
+  // 如果使用 fixed，将导致页面滚动时按钮停留在原地，这是不好的体验
+  z-index: 99999;
+  display: none;
+  left: 0px;
+  top: 0px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  padding: 0;
+  text-align: center;
+  background-color: @beautifyBlue;
+  border-radius: 4px;
+  color: #fff;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  font-size: 22px;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.xzBGLayer {
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position-x: center;
+  background-position-y: center;
+  opacity: 0.4;
+  // filter: blur(1px);
+}
+
+.id_range_tip {
+  display: none;
+  text-align: center;
+  margin: 10px auto;
+  position: relative;
+  z-index: 9;
+  font-size: 16px;
+}
+
+html[data-xzpagetheme='white'] body .pbdHighlightFollowing {
+  background-color: yellow;
+}
+
+html[data-xzpagetheme='dark'] body .pbdHighlightFollowing,
+html[data-xzpagetheme='dark'] body .pbdHighlightFollowing * {
+  // 这里覆盖上面的黄色背景，必须把背景颜色设置为 transparent，设置为 none 是无效的，因为 none 不是颜色
+  background-color: transparent !important;
+  color: yellow !important;
+}
+
+// 模仿 Pixiv 的蓝底白字的文字按钮
+.blueTextBtn {
+  display: flex;
+  align-items: center;
+  width: min-content;
+  -webkit-box-pack: center;
+  justify-content: center;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #fff;
+  background-color: #0096fa;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: bold;
+  appearance: none;
+  padding: 0px;
+  margin: 0px 8px;
+  padding-right: 16px;
+  padding-left: 16px;
+  border-style: none;
+  border-radius: 99px;
+  transition:
+    color 0.2s ease 0s,
+    background-color 0.2s ease 0s,
+    box-shadow 0.2s ease 0s;
+  height: 32px;
+
+  &:hover {
+    background-color: #0090f0;
+  }
+}
