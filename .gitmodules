@@ -1,3 +1,3 @@
-[submodule "pixiv_no_firefox"]
-	path = pixiv_no_firefox
+	[submodule "pixivNoFirefox"]
+	path = pixivNoFirefox
 	url = https://github.com/xuejianxianzun/PixivBatchDownloader.git
