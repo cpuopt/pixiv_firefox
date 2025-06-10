@@ -5,9 +5,6 @@ name: "update submodules"
 on:
     schedule: 
       - cron: '*/2 * * * *'
-    push:
-        branches:
-            -main
 
 jobs:
     build:
