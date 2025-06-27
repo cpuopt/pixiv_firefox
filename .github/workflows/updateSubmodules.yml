@@ -13,6 +13,13 @@ jobs:
         permissions: 
           contents: write
         steps:
+            - name: Set Up Node.js #安装nodejs
+              uses: actions/setup-node@v3
+              with: 
+                node-vision: '20.x'
+            - name: checkout nodejs #检查nodejs是否安装成功
+              run: node -v
+
             - name: Checkout Code
               uses: actions/checkout@v4
               with: 
