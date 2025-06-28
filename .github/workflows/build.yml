@@ -32,11 +32,14 @@ jobs:
               run: 
                 node replace_json.js && cd pixivNoFirefox && npm i && npm run build && ls 
 
+            - name: Unzip artifact
+              run: unzip ./pixivNoFirefox/powerfulpixivdownloader-online.zip -d temp
+
             - name: Upload build artifacts
               uses: actions/upload-artifact@v4
               with:
-                name: powerfulpixivdownloader-online.zip
-                path: ./pixivNoFirefox/powerfulpixivdownloader-online.zip
+                name: powerfulpixivdownloader-online
+                path: ./temp/powerfulpixivdownloader-online
 
             
             
