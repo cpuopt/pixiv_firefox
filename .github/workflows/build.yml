@@ -30,7 +30,7 @@ jobs:
 
             - name: replace manifest and build
               run: 
-                node replace_json.js && cd pixivNoFirefox && npm i && node run build && ls 
+                node replace_json.js && cd pixivNoFirefox && npm i && npm run build && ls 
 
             
             
