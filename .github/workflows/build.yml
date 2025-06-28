@@ -1,0 +1,38 @@
+#示例
+
+name: "build"
+
+on:
+    push:
+      branches: [main]
+    workflow_dispatch: #支持手动触发
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        permissions: 
+          contents: write
+        steps:
+            - name: Set Up Node.js #安装nodejs
+              uses: actions/setup-node@v3
+              with: 
+                node-version: '20.x'
+            - name: checkout nodejs #检查nodejs是否安装成功
+              run: |
+                node -v
+                npm -v
+
+            - name: Checkout Code
+              uses: actions/checkout@v4
+              with: 
+                submodules: 'recursive'
+                token: ${{ secrets.GITHUB_TOKEN }}  # 确保有推送权限
+
+            - name: replace manifest and build
+              run: 
+                node replace_json.js && cd pixivNoFirefox && npm i && node run build && ls 
+
+            
+            
+
+            
