@@ -34,7 +34,7 @@ jobs:
 
             - name: replace chrome with browser
               run: 
-                && npm i \
+                npm i \
                 && node replace_chrome_with_browser.js \
                 && cd pixivNoFirefox \
                 && npm run build \
