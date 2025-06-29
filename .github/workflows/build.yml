@@ -30,22 +30,19 @@ jobs:
 
             - name: modify manifest
               run: 
-                node modify_manifest.js \
+                node modify_manifest.js
 
             - name: replace chrome with browser
               run: 
-                npm i \
-                && node replace_chrome_with_browser.js \
-                && cd pixivNoFirefox \
-                && npm run build \
-                && ls 
+                npm i && node replace_chrome_with_browser.js
 
             - name: run build
-              run: 
-                cd pixivNoFirefox \
-                && npm i \
-                && npm run build \
-                && ls 
+              run: |
+                set -e
+                cd pixivNoFirefox
+                npm i
+                npm run build
+                ls 
 
             - name: Unzip artifact
               run: unzip ./pixivNoFirefox/powerfulpixivdownloader-online.zip -d temp
