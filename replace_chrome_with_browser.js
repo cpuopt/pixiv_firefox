@@ -28,56 +28,111 @@ function getAllTsFiles(dir) {
 // ✅ 3. 处理单个文件的 AST
 function transformFile(filePath) {
     const sourceFile = project.addSourceFileAtPath(filePath);
-
     let changed = false;
 
     // ✅ 替换 chrome -> browser
-    sourceFile.forEachDescendant((node) => {
+    sourceFile.forEachChild((node) => {
         if (node.getKind() === SyntaxKind.Identifier && node.getText() === "chrome") {
             node.replaceWithText("browser");
             changed = true;
         }
     });
 
-    // ✅ 改写 chrome.downloads.download(xxx, callback) -> await browser.downloads.download(xxx)
-    sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
-        const expr = call.getExpression();
-        if (expr.getKind() === SyntaxKind.PropertyAccessExpression) {
-            const prop = expr;
+    // ✅ 合并所有 CallExpression 处理逻辑
+    sourceFile.forEachDescendant((node) => {
+        if (node.getKind() === SyntaxKind.CallExpression) {
+            const call = node;
+            try {
+                const expr = call.getExpression();
 
-            if (prop.getExpression().getText() === "browser.downloads" && prop.getName() === "download") {
-                const args = call.getArguments();
+                // 处理 browser.tabs.sendMessage
+                if (expr.getKind() === SyntaxKind.PropertyAccessExpression && expr.getExpression().getText() === "browser.tabs" && expr.getName() === "sendMessage") {
+                    const args = call.getArguments();
+                    if (args.length === 3 && args[2].getKind() === SyntaxKind.ArrowFunction) {
+                        const tabArg = args[0].getText();
+                        const msgArg = args[1].getText();
+                        const arrowFunc = args[2];
+                        const paramName = arrowFunc.getParameters()[0]?.getName() || "res";
+                        const bodyText = arrowFunc.getBody().getKind() === SyntaxKind.Block ? arrowFunc.getBody().getText() : `{ return ${arrowFunc.getBody().getText()}; }`;
 
-                if (args.length === 2 && args[0].getKind() === SyntaxKind.ObjectLiteralExpression && args[1].getKind() === SyntaxKind.ArrowFunction) {
-                    const optionsArg = args[0].getText();
-                    const arrowFn = args[1];
-                    const paramName = arrowFn.getParameters()[0]?.getName() || "id";
-                    const body = arrowFn.getBody();
+                        const newText = `browser.tabs.sendMessage(${tabArg}, ${msgArg}).then((${paramName}) => ${bodyText})`;
 
-                    let thenBody = "";
-
-                    if (body.getKind() === SyntaxKind.Block) {
-                        thenBody = body.getText(); // 带花括号的 block {...}
-                    } else {
-                        // 单表达式
-                        thenBody = `{ return ${body.getText()}; }`;
-                    }
-
-                    const newText = `browser.downloads\n  .download(${optionsArg})\n  .then((${paramName}) => ${thenBody})`;
-
-                    const exprStmt = call.getFirstAncestorByKind(SyntaxKind.ExpressionStatement);
-                    if (exprStmt) {
-                        exprStmt.replaceWithText(newText);
-                        changed = true;
+                        const stmt = call.getFirstAncestorByKind(SyntaxKind.ExpressionStatement);
+                        if (stmt) {
+                            stmt.replaceWithText(newText);
+                            changed = true;
+                            return; // 修改后立即返回
+                        }
                     }
                 }
+
+                // 处理 browser.storage.local.get
+                else if (expr.getKind() === SyntaxKind.PropertyAccessExpression && expr.getExpression().getText() === "browser.storage.local" && expr.getName() === "get") {
+                    const args = call.getArguments();
+                    if (args.length === 2 && args[1].getKind() === SyntaxKind.ArrowFunction) {
+                        const keyArg = args[0].getText();
+                        const arrowFn = args[1];
+                        const paramName = arrowFn.getParameters()[0]?.getName() || "result";
+                        const bodyText = arrowFn.getBody().getKind() === SyntaxKind.Block ? arrowFn.getBody().getText() : `{ return ${arrowFn.getBody().getText()}; }`;
+
+                        const newText = `browser.storage.local.get(${keyArg}).then((${paramName}) => ${bodyText})`;
+
+                        const stmt = call.getFirstAncestorByKind(SyntaxKind.ExpressionStatement);
+                        if (stmt) {
+                            stmt.replaceWithText(newText);
+                            changed = true;
+                            return; // 修改后立即返回
+                        }
+                    }
+                }
+
+                // 处理 browser.downloads.download
+                else if (expr.getKind() === SyntaxKind.PropertyAccessExpression && expr.getExpression().getText() === "browser.downloads" && expr.getName() === "download") {
+                    const args = call.getArguments();
+                    if (args.length === 2 && args[0].getKind() === SyntaxKind.ObjectLiteralExpression && args[1].getKind() === SyntaxKind.ArrowFunction) {
+                        const optionsArg = args[0].getText();
+                        const arrowFn = args[1];
+                        const paramName = arrowFn.getParameters()[0]?.getName() || "id";
+                        const body = arrowFn.getBody();
+                        const bodyText = body.getKind() === SyntaxKind.Block ? body.getText() : `{ return ${body.getText()}; }`;
+
+                        const newText = `browser.downloads.download(${optionsArg}).then((${paramName}) => ${bodyText})`;
+
+                        const exprStmt = call.getFirstAncestorByKind(SyntaxKind.ExpressionStatement);
+                        if (exprStmt) {
+                            exprStmt.replaceWithText(newText);
+                            changed = true;
+                            return; // 修改后立即返回
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error(`处理 ${filePath} 时出错:`, error);
+            }
+        }
+    });
+
+    // 处理 VariableDeclaration
+    sourceFile.forEachDescendant((node) => {
+        if (node.getKind() === SyntaxKind.VariableDeclaration) {
+            const decl = node;
+            const name = decl.getName();
+            const initializer = decl.getInitializer();
+
+            if (name === "formData" && initializer && initializer.getText() === "details.requestBody.formData") {
+                decl.setInitializer("details.requestBody.formData as { [key: string]: string[] }");
+                changed = true;
             }
         }
     });
 
     if (changed) {
-        sourceFile.saveSync();
-        console.log(`✔ 修改: ${filePath}`);
+        try {
+            sourceFile.saveSync();
+            console.log(`✔ 修改: ${filePath}`);
+        } catch (error) {
+            console.error(`保存 ${filePath} 时出错:`, error);
+        }
     }
 }
 
