@@ -41,6 +41,7 @@ jobs:
                 set -e
                 cd pixivNoFirefox
                 npm i
+                npm install --save-dev @types/firefox-webext-browser
                 npm run build
                 ls 
 
