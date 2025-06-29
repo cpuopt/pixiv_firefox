@@ -90,13 +90,20 @@ function transformFile(filePath) {
                 else if (expr.getKind() === SyntaxKind.PropertyAccessExpression && expr.getExpression().getText() === "browser.downloads" && expr.getName() === "download") {
                     const args = call.getArguments();
                     if (args.length === 2 && args[0].getKind() === SyntaxKind.ObjectLiteralExpression && args[1].getKind() === SyntaxKind.ArrowFunction) {
-                        const optionsArg = args[0].getText();
+                        const objLit = args[0].asKind(SyntaxKind.ObjectLiteralExpression);
                         const arrowFn = args[1];
                         const paramName = arrowFn.getParameters()[0]?.getName() || "id";
                         const body = arrowFn.getBody();
                         const bodyText = body.getKind() === SyntaxKind.Block ? body.getText() : `{ return ${body.getText()}; }`;
 
-                        const newText = `browser.downloads.download(${optionsArg}).then((${paramName}) => ${bodyText})`;
+                        // 找到 url 属性
+                        const urlProp = objLit.getProperty("url");
+                        if (urlProp && urlProp.getKind() === SyntaxKind.PropertyAssignment) {
+                            // 用新表达式替换 url 值
+                            urlProp.setInitializer(`URL.createObjectURL(new Blob([msg.arrayBuffer as ArrayBuffer], { type: "application/octet-stream" }))`);
+                        }
+
+                        const newText = `browser.downloads.download(${objLit.getText()}).then((${paramName}) => ${bodyText})`;
 
                         const exprStmt = call.getFirstAncestorByKind(SyntaxKind.ExpressionStatement);
                         if (exprStmt) {
@@ -126,6 +133,77 @@ function transformFile(filePath) {
         }
     });
 
+    // 给接口 SendToBackEndData 添加 arrayBuffer 属性
+    const interfaceDecl = sourceFile.getInterface("SendToBackEndData");
+    if (interfaceDecl) {
+        const existingProp = interfaceDecl.getProperty("arrayBuffer");
+        if (!existingProp) {
+            interfaceDecl.addProperty({
+                name: "arrayBuffer",
+                type: "ArrayBuffer",
+                hasQuestionToken: true, // 表示可选属性
+                docs: [{ description: "文件的二进制数据" }],
+            });
+            changed = true;
+        }
+    }
+
+    // 找到 Download 类
+    const downloadClass = sourceFile.getClass("Download");
+    if (downloadClass) {
+        // 1. 修改 browserDownload 方法
+        const method = downloadClass.getMethod("browserDownload");
+        if (method) {
+            const parameters = method.getParameters();
+            const lastParam = parameters[parameters.length - 1];
+
+            // 添加 arrayBuffer?: ArrayBuffer 到最后一个位置
+            method.insertParameter(parameters.length, {
+                name: "arrayBuffer",
+                type: "ArrayBuffer",
+                hasQuestionToken: true,
+            });
+
+            // 找到 sendData 定义并添加 arrayBuffer 字段
+            method
+                .getDescendantsOfKind(SyntaxKind.VariableDeclaration)
+                .filter((decl) => decl.getName() === "sendData")
+                .forEach((decl) => {
+                    const objLit = decl.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression);
+                    if (objLit && !objLit.getProperty("arrayBuffer")) {
+                        objLit.addPropertyAssignment({
+                            name: "arrayBuffer",
+                            initializer: "arrayBuffer",
+                        });
+                    }
+                });
+        }
+
+        // 2. 修改 download 方法中的 this.browserDownload(...) 调用
+        const downloadMethod = downloadClass.getMethod("download");
+        if (downloadMethod) {
+            const callExprs = downloadMethod.getDescendantsOfKind(SyntaxKind.CallExpression);
+            callExprs
+                .filter((expr) => expr.getExpression().getText() === "this.browserDownload")
+                .forEach((expr) => {
+                    const args = expr.getArguments();
+                    if (args.length === 4 || args.length === 5) {
+                        // 避免重复插入
+                        expr.addArgument("await file.arrayBuffer()");
+                    }
+                });
+        }
+        changed = true;
+    }
+
+    if (changed) {
+        try {
+            sourceFile.saveSync();
+            console.log(`✔ 修改: ${filePath}`);
+        } catch (error) {
+            console.error(`保存 ${filePath} 时出错:`, error);
+        }
+    }
     if (changed) {
         try {
             sourceFile.saveSync();
