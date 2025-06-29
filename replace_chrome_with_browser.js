@@ -31,7 +31,7 @@ function transformFile(filePath) {
     let changed = false;
 
     // ✅ 替换 chrome -> browser
-    sourceFile.forEachChild((node) => {
+    sourceFile.forEachDescendant((node) => {
         if (node.getKind() === SyntaxKind.Identifier && node.getText() === "chrome") {
             node.replaceWithText("browser");
             changed = true;
