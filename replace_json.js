@@ -19,10 +19,6 @@ fs.readFile('./pixivNoFirefox/src/manifest.json', 'utf8', (err, data) => {
             }
         }
 
-        jsonData.background = {
-            "scripts": ["background.js"]
-        }
-
         // 将修改后的数据转换回 JSON 字符串
         const updatedJsonString = JSON.stringify(jsonData, null, 2); // null, 2 用于格式化输出，使其更易读
 
