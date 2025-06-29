@@ -38,12 +38,16 @@ jobs:
                 && cd pixivNoFirefox \
                 && npm i \
                 && npm install --save-dev @types/firefox-webext-browser \
+                && cd .. \
+                && npm install ts-morph typescript \
+                && node replace_chrome_with_browser.js \
+                && cd pixivNoFirefox \
                 && npm run build \
                 && ls 
 
             - name: run build
               run: 
-                && cd pixivNoFirefox \
+                cd pixivNoFirefox \
                 && npm run build \
                 && ls 
 
