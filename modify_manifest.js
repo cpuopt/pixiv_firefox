@@ -14,7 +14,7 @@ fs.readFile("./pixivNoFirefox/src/manifest.json", "utf8", (err, data) => {
         console.log(jsonData);
         jsonData.browser_specific_settings = {
             gecko: {
-                id: "3266197691@qq.com",
+                id: "1234567890@qq.com",
                 strict_min_version: "109.0",
             },
         };

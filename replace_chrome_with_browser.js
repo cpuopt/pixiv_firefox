@@ -100,7 +100,7 @@ function transformFile(filePath) {
                         const urlProp = objLit.getProperty("url");
                         if (urlProp && urlProp.getKind() === SyntaxKind.PropertyAssignment) {
                             // 用新表达式替换 url 值
-                            urlProp.setInitializer(`URL.createObjectURL(new Blob([msg.arrayBuffer as ArrayBuffer], { type: "application/octet-stream" }))`);
+                            urlProp.setInitializer(`URL.createObjectURL(new Blob([msg.buffer as ArrayBuffer], { type: "application/octet-stream" }))`);
                         }
 
                         const newText = `browser.downloads.download(${objLit.getText()}).then((${paramName}) => ${bodyText})`;
@@ -133,13 +133,13 @@ function transformFile(filePath) {
         }
     });
 
-    // 给接口 SendToBackEndData 添加 arrayBuffer 属性
+    // 给接口 SendToBackEndData 添加 buffer 属性
     const interfaceDecl = sourceFile.getInterface("SendToBackEndData");
     if (interfaceDecl) {
-        const existingProp = interfaceDecl.getProperty("arrayBuffer");
+        const existingProp = interfaceDecl.getProperty("buffer");
         if (!existingProp) {
             interfaceDecl.addProperty({
-                name: "arrayBuffer",
+                name: "buffer",
                 type: "ArrayBuffer",
                 hasQuestionToken: true, // 表示可选属性
                 docs: [{ description: "文件的二进制数据" }],
@@ -157,23 +157,23 @@ function transformFile(filePath) {
             const parameters = method.getParameters();
             const lastParam = parameters[parameters.length - 1];
 
-            // 添加 arrayBuffer?: ArrayBuffer 到最后一个位置
+            // 添加 buffer?: ArrayBuffer 到最后一个位置
             method.insertParameter(parameters.length, {
-                name: "arrayBuffer",
+                name: "buffer",
                 type: "ArrayBuffer",
                 hasQuestionToken: true,
             });
 
-            // 找到 sendData 定义并添加 arrayBuffer 字段
+            // 找到 sendData 定义并添加 buffer 字段
             method
                 .getDescendantsOfKind(SyntaxKind.VariableDeclaration)
                 .filter((decl) => decl.getName() === "sendData")
                 .forEach((decl) => {
                     const objLit = decl.getInitializerIfKind(SyntaxKind.ObjectLiteralExpression);
-                    if (objLit && !objLit.getProperty("arrayBuffer")) {
+                    if (objLit && !objLit.getProperty("buffer")) {
                         objLit.addPropertyAssignment({
-                            name: "arrayBuffer",
-                            initializer: "arrayBuffer",
+                            name: "buffer",
+                            initializer: "buffer",
                         });
                     }
                 });
@@ -196,14 +196,80 @@ function transformFile(filePath) {
         changed = true;
     }
 
-    if (changed) {
-        try {
-            sourceFile.saveSync();
-            console.log(`✔ 修改: ${filePath}`);
-        } catch (error) {
-            console.error(`保存 ${filePath} 时出错:`, error);
+    // 处理 DownloadNovelCover 类
+    const novelCoverClass = sourceFile.getClass("DownloadNovelCover");
+    if (novelCoverClass) {
+        const methodDownload = novelCoverClass.getMethod("download");
+        const methodGetCoverBolbURL = novelCoverClass.getMethod("getCoverBolbURL");
+        const methodSendDownload = novelCoverClass.getMethod("sendDownload");
+
+        // 1. 修改 getCoverBolbURL 方法的返回类型和返回语句
+        if (methodGetCoverBolbURL) {
+            methodGetCoverBolbURL.setReturnType("Promise<{ url: string; buffer: ArrayBuffer }>");
+            methodGetCoverBolbURL.setBodyText(`
+                return new Promise(async (resolve, reject) => {
+                    const res = await fetch(coverURL, {
+                        method: 'get',
+                        credentials: 'same-origin',
+                    });
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const buffer = await blob.arrayBuffer();
+                    resolve({ url, buffer });
+                });
+            `);
+            changed = true;
+        }
+
+        // 2. 修改 download 方法中对 getCoverBolbURL 的调用
+        if (methodDownload) {
+            methodDownload.getDescendantsOfKind(SyntaxKind.VariableStatement).forEach((stmt) => {
+                const decls = stmt.getDeclarationList().getDeclarations();
+                if (decls.length === 1 && decls[0].getName() === "url") {
+                    const initText = decls[0].getInitializer()?.getText() ?? "";
+                    if (initText.startsWith("await this.getCoverBolbURL")) {
+                        stmt.replaceWithText(`const { url, buffer } = await this.getCoverBolbURL(coverURL);`);
+                        changed = true;
+                    }
+                }
+            });
+
+            methodDownload.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((expr) => {
+                if (expr.getExpression().getText() === "this.sendDownload") {
+                    const args = expr.getArguments();
+                    const hasBuffer = args.some((arg) => arg.getText() === "buffer");
+                    if (!hasBuffer) {
+                        expr.addArgument("buffer");
+                        changed = true;
+                    }
+                }
+            });
+        }
+
+        // 3. 修改 sendDownload 方法参数和内部 message 对象
+        if (methodSendDownload) {
+            methodSendDownload.insertParameter(2, {
+                name: "buffer",
+                type: "ArrayBuffer",
+            });
+
+            methodSendDownload.getDescendantsOfKind(SyntaxKind.ObjectLiteralExpression).forEach((obj) => {
+                const hasBuffer = obj.getProperty("buffer");
+                if (!hasBuffer) {
+                    obj.addPropertyAssignment({
+                        name: "buffer",
+                        initializer: "buffer",
+                    });
+                    changed = true;
+                }
+            });
+        }
+
+        if (changed) {
+            console.log(`✔ 修改: DownloadNovelCover 类 (${filePath})`);
         }
     }
+
     if (changed) {
         try {
             sourceFile.saveSync();
